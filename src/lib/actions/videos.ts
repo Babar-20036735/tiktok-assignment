@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { videos } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { getVideos as getVideosQuery } from "@/lib/db/queries/videos";
+import { auth } from "@/auth";
 
 export async function createVideo({
   title,
@@ -52,14 +54,11 @@ export async function createVideo({
 
 export async function getVideos(limit = 20, offset = 0) {
   try {
-    const videoList = await db.query.videos.findMany({
-      with: {
-        user: true,
-      },
-      orderBy: [desc(videos.createdAt)],
-      limit,
-      offset,
-    });
+    // Get user session
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    const videoList = await getVideosQuery(limit, offset, userId);
 
     return {
       success: true,

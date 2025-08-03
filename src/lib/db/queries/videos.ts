@@ -2,8 +2,8 @@ import { db } from "@/lib/db";
 import { comments, likes, videoViews, videos } from "@/lib/db/schema";
 import { and, count, desc, eq, sql } from "drizzle-orm";
 
-export const getVideos = async (limit = 20, offset = 0) => {
-  return await db.query.videos.findMany({
+export const getVideos = async (limit = 20, offset = 0, userId?: string) => {
+  const videoList = await db.query.videos.findMany({
     with: {
       user: true,
     },
@@ -11,6 +11,26 @@ export const getVideos = async (limit = 20, offset = 0) => {
     limit,
     offset,
   });
+
+  // If userId is provided, get like status for each video
+  if (userId) {
+    const videosWithLikes = await Promise.all(
+      videoList.map(async (video) => {
+        const userLike = await getUserLikeByVideoId(video.id, userId);
+        const likeStats = await getLikesByVideoId(video.id);
+
+        return {
+          ...video,
+          userLike: userLike?.type || null,
+          likeCount: likeStats.likes,
+          dislikeCount: likeStats.dislikes,
+        };
+      })
+    );
+    return videosWithLikes;
+  }
+
+  return videoList;
 };
 
 export const getVideoById = async (id: string) => {
@@ -134,4 +154,83 @@ export const getUserLikeByVideoId = async (videoId: string, userId: string) => {
   return await db.query.likes.findFirst({
     where: and(eq(likes.videoId, videoId), eq(likes.userId, userId)),
   });
+};
+
+// Like/Dislike actions
+export const likeVideo = async (videoId: string, userId: string) => {
+  try {
+    // Check if video exists
+    const video = await getVideoById(videoId);
+    if (!video) {
+      return { error: "Video not found" };
+    }
+
+    // Check if user already liked/disliked this video
+    const existingLike = await getUserLikeByVideoId(videoId, userId);
+
+    if (existingLike) {
+      if (existingLike.type === "like") {
+        // Remove like
+        await db.delete(likes).where(eq(likes.id, existingLike.id));
+        return { success: true, action: "removed", type: "like" };
+      } else {
+        // Change dislike to like
+        await db
+          .update(likes)
+          .set({ type: "like" })
+          .where(eq(likes.id, existingLike.id));
+        return { success: true, action: "changed", type: "like" };
+      }
+    } else {
+      // Create new like
+      await db.insert(likes).values({
+        videoId,
+        userId,
+        type: "like",
+      });
+      return { success: true, action: "added", type: "like" };
+    }
+  } catch (error) {
+    console.error("Like video error:", error);
+    return { error: "Failed to like video" };
+  }
+};
+
+export const dislikeVideo = async (videoId: string, userId: string) => {
+  try {
+    // Check if video exists
+    const video = await getVideoById(videoId);
+    if (!video) {
+      return { error: "Video not found" };
+    }
+
+    // Check if user already liked/disliked this video
+    const existingLike = await getUserLikeByVideoId(videoId, userId);
+
+    if (existingLike) {
+      if (existingLike.type === "dislike") {
+        // Remove dislike
+        await db.delete(likes).where(eq(likes.id, existingLike.id));
+        return { success: true, action: "removed", type: "dislike" };
+      } else {
+        // Change like to dislike
+        await db
+          .update(likes)
+          .set({ type: "dislike" })
+          .where(eq(likes.id, existingLike.id));
+        return { success: true, action: "changed", type: "dislike" };
+      }
+    } else {
+      // Create new dislike
+      await db.insert(likes).values({
+        videoId,
+        userId,
+        type: "dislike",
+      });
+      return { success: true, action: "added", type: "dislike" };
+    }
+  } catch (error) {
+    console.error("Dislike video error:", error);
+    return { error: "Failed to dislike video" };
+  }
 };

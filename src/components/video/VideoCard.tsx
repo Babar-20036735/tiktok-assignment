@@ -15,6 +15,9 @@ import {
 } from "lucide-react";
 import LoginDialog from "@/components/auth/LoginDialog";
 import { Video } from "@/types/video";
+import { likeVideoAction, dislikeVideoAction } from "@/lib/actions/likes";
+import { toast } from "sonner";
+import { formatTimeAgo } from "@/lib/utils";
 
 interface VideoCardProps {
   video: Video;
@@ -45,11 +48,14 @@ export default function VideoCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [disliked, setDisliked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
+  const [liked, setLiked] = useState(video.userLike === "like");
+  const [disliked, setDisliked] = useState(video.userLike === "dislike");
+  const [likeCount, setLikeCount] = useState(video.likeCount || 0);
+  const [dislikeCount, setDislikeCount] = useState(video.dislikeCount || 0);
   const [commentCount, setCommentCount] = useState(0);
   const [showComments, setShowComments] = useState(false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
+  const [isDislikeLoading, setIsDislikeLoading] = useState(false);
 
   const handlePlayPause = () => {
     if (videoRef.current) {
@@ -81,36 +87,75 @@ export default function VideoCard({
     }
   }, [isActive, isScrolling]);
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (!session) {
       setShowLoginDialog(true);
       return;
     }
 
-    if (liked) {
-      setLiked(false);
-      setLikeCount((prev) => prev - 1);
-    } else {
-      setLiked(true);
-      setDisliked(false);
-      setLikeCount((prev) => prev + 1);
+    if (isLikeLoading) return;
+
+    setIsLikeLoading(true);
+    try {
+      const result = await likeVideoAction(video.id);
+
+      if (result.success) {
+        if (result.action === "added" || result.action === "changed") {
+          setLiked(true);
+          setDisliked(false);
+          setLikeCount((prev) => prev + 1);
+          if (disliked) {
+            setDislikeCount((prev) => prev - 1);
+          }
+        } else if (result.action === "removed") {
+          setLiked(false);
+          setLikeCount((prev) => prev - 1);
+        }
+      } else {
+        console.error("Like error:", result.message);
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error("Like video error:", error);
+      toast.error("Something went wrong");
+    } finally {
+      setIsLikeLoading(false);
     }
   };
 
-  const handleDislike = () => {
+  const handleDislike = async () => {
     if (!session) {
       setShowLoginDialog(true);
       return;
     }
 
-    if (disliked) {
-      setDisliked(false);
-    } else {
-      setDisliked(true);
-      setLiked(false);
-      if (liked) {
-        setLikeCount((prev) => prev - 1);
+    if (isDislikeLoading) return;
+
+    setIsDislikeLoading(true);
+    try {
+      const result = await dislikeVideoAction(video.id);
+
+      if (result.success) {
+        if (result.action === "added" || result.action === "changed") {
+          setDisliked(true);
+          setLiked(false);
+          setDislikeCount((prev) => prev + 1);
+          if (liked) {
+            setLikeCount((prev) => prev - 1);
+          }
+        } else if (result.action === "removed") {
+          setDisliked(false);
+          setDislikeCount((prev) => prev - 1);
+        }
+      } else {
+        console.error("Dislike error:", result.error);
+        toast.error(result.message);
       }
+    } catch (error) {
+      console.error("Dislike video error:", error);
+      toast.error("Something went wrong");
+    } finally {
+      setIsDislikeLoading(false);
     }
   };
 
@@ -121,19 +166,6 @@ export default function VideoCard({
     }
 
     setShowComments(!showComments);
-  };
-
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diffInSeconds = Math.floor(
-      (now.getTime() - new Date(date).getTime()) / 1000
-    );
-
-    if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
   return (
@@ -218,9 +250,10 @@ export default function VideoCard({
             variant="ghost"
             size="sm"
             onClick={handleLike}
+            disabled={isLikeLoading}
             className={`p-1.5 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-70 ${
               liked ? "text-red-500" : ""
-            }`}
+            } ${isLikeLoading ? "opacity-50" : ""}`}
           >
             <Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />
           </Button>
@@ -229,9 +262,10 @@ export default function VideoCard({
             variant="ghost"
             size="sm"
             onClick={handleDislike}
+            disabled={isDislikeLoading}
             className={`p-1.5 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-70 ${
               disliked ? "text-blue-500" : ""
-            }`}
+            } ${isDislikeLoading ? "opacity-50" : ""}`}
           >
             <ThumbsDown
               className={`h-5 w-5 ${disliked ? "fill-current" : ""}`}
