@@ -1,147 +1,103 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { comments } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { auth } from "@/auth";
+import {
+  getCommentsByVideoId,
+  createComment,
+  deleteComment,
+} from "@/lib/db/queries/comments";
 import { revalidatePath } from "next/cache";
 
-export async function createComment({
-  content,
-  videoId,
-  userId,
-  parentId,
-}: {
-  content: string;
-  videoId: string;
-  userId: string;
-  parentId?: string;
-}) {
+export async function getCommentsAction(videoId: string) {
   try {
-    if (!content || !videoId || !userId) {
-      return { error: "Content, video ID, and user ID are required" };
+    // Validate videoId
+    if (!videoId || typeof videoId !== "string") {
+      return { success: false, message: "Invalid video ID" };
     }
 
-    const newComment = await db
-      .insert(comments)
-      .values({
-        content,
-        videoId,
-        userId,
-        parentId,
-      })
-      .returning();
-
-    revalidatePath(`/video/${videoId}`);
+    const comments = await getCommentsByVideoId(videoId);
 
     return {
       success: true,
-      comment: newComment[0],
+      comments,
     };
   } catch (error) {
-    console.error("Create comment error:", error);
-    return { error: "Internal server error" };
+    console.error("Get comments action error:", error);
+    return { success: false, message: "Failed to fetch comments" };
   }
 }
 
-export async function getCommentsByVideoId(
-  videoId: string,
-  limit = 50,
-  offset = 0
-) {
+export async function createCommentAction(videoId: string, content: string) {
   try {
-    const commentList = await db.query.comments.findMany({
-      where: eq(comments.videoId, videoId),
-      with: {
-        user: true,
-        replies: {
-          with: {
-            user: true,
-          },
-        },
-      },
-      orderBy: [desc(comments.createdAt)],
-      limit,
-      offset,
+    // Get user session
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, message: "Authentication required" };
+    }
+
+    // Validate inputs
+    if (!videoId || typeof videoId !== "string") {
+      return { success: false, message: "Invalid video ID" };
+    }
+
+    if (!content || typeof content !== "string") {
+      return { success: false, message: "Comment content is required" };
+    }
+
+    // Call the database function
+    const result = await createComment({
+      content,
+      videoId,
+      userId: session.user.id,
     });
+
+    if (result.error) {
+      return { success: false, message: result.error };
+    }
+
+    // Revalidate relevant paths
+    revalidatePath("/");
 
     return {
       success: true,
-      comments: commentList,
+      message: "Comment created successfully",
+      comment: result.comment,
     };
   } catch (error) {
-    console.error("Get comments error:", error);
-    return { error: "Internal server error" };
+    console.error("Create comment action error:", error);
+    return { success: false, message: "Internal server error" };
   }
 }
 
-export async function updateComment({
-  id,
-  content,
-  userId,
-}: {
-  id: string;
-  content: string;
-  userId: string;
-}) {
+export async function deleteCommentAction(commentId: string) {
   try {
-    // Check if comment belongs to user
-    const comment = await db.query.comments.findFirst({
-      where: eq(comments.id, id),
-    });
-
-    if (!comment) {
-      return { error: "Comment not found" };
+    // Get user session
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, message: "Authentication required" };
     }
 
-    if (comment.userId !== userId) {
-      return { error: "Unauthorized to edit this comment" };
+    // Validate commentId
+    if (!commentId || typeof commentId !== "string") {
+      return { success: false, message: "Invalid comment ID" };
     }
 
-    const updatedComment = await db
-      .update(comments)
-      .set({
-        content,
-        updatedAt: new Date(),
-      })
-      .where(eq(comments.id, id))
-      .returning();
+    // Call the database function
+    const result = await deleteComment(commentId, session.user.id);
 
-    revalidatePath(`/video/${comment.videoId}`);
+    if (result.error) {
+      return { success: false, message: result.error };
+    }
+
+    // Revalidate relevant paths
+    revalidatePath("/");
 
     return {
       success: true,
-      comment: updatedComment[0],
+      message: "Comment deleted successfully",
     };
   } catch (error) {
-    console.error("Update comment error:", error);
-    return { error: "Internal server error" };
-  }
-}
-
-export async function deleteComment(id: string, userId: string) {
-  try {
-    // Check if comment belongs to user
-    const comment = await db.query.comments.findFirst({
-      where: eq(comments.id, id),
-    });
-
-    if (!comment) {
-      return { error: "Comment not found" };
-    }
-
-    if (comment.userId !== userId) {
-      return { error: "Unauthorized to delete this comment" };
-    }
-
-    await db.delete(comments).where(eq(comments.id, id));
-
-    revalidatePath(`/video/${comment.videoId}`);
-
-    return {
-      success: true,
-    };
-  } catch (error) {
-    console.error("Delete comment error:", error);
-    return { error: "Internal server error" };
+    console.error("Delete comment action error:", error);
+    return { success: false, message: "Internal server error" };
   }
 }

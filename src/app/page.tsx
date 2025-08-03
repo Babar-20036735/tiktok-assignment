@@ -13,7 +13,7 @@ export default async function HomePage() {
   const videos = result.videos;
 
   return (
-    <div className="h-[calc(100vh-70px)] bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="h-[calc(100vh-70px)] bg-gray-100">
       {videos.length === 0 ? (
         <div className="flex items-center justify-center h-screen">
           <div className="bg-white rounded-lg shadow-md p-8 text-center max-w-md mx-4">

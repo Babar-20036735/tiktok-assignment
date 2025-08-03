@@ -18,6 +18,7 @@ import { Video } from "@/types/video";
 import { likeVideoAction, dislikeVideoAction } from "@/lib/actions/likes";
 import { toast } from "sonner";
 import { formatTimeAgo } from "@/lib/utils";
+import CommentsSheet from "./CommentsSheet";
 
 interface VideoCardProps {
   video: Video;
@@ -52,8 +53,6 @@ export default function VideoCard({
   const [disliked, setDisliked] = useState(video.userLike === "dislike");
   const [likeCount, setLikeCount] = useState(video.likeCount || 0);
   const [dislikeCount, setDislikeCount] = useState(video.dislikeCount || 0);
-  const [commentCount, setCommentCount] = useState(0);
-  const [showComments, setShowComments] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [isDislikeLoading, setIsDislikeLoading] = useState(false);
 
@@ -164,8 +163,6 @@ export default function VideoCard({
       setShowLoginDialog(true);
       return;
     }
-
-    setShowComments(!showComments);
   };
 
   return (
@@ -272,14 +269,7 @@ export default function VideoCard({
             />
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleComment}
-            className="p-1.5 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-70"
-          >
-            <MessageCircle className="h-5 w-5" />
-          </Button>
+          <CommentsSheet videoId={video.id} videoTitle={video.title} />
         </div>
 
         {/* Video Counter */}
@@ -287,16 +277,6 @@ export default function VideoCard({
           {currentIndex} / {totalVideos}
         </div>
       </div>
-
-      {/* Comments Section */}
-      {showComments && (
-        <div className="bg-white p-4 max-h-64 overflow-y-auto">
-          <h4 className="font-semibold mb-3">Comments</h4>
-          <div className="text-center text-gray-500">
-            <p>Comments feature coming soon!</p>
-          </div>
-        </div>
-      )}
 
       {/* Login Dialog */}
       <LoginDialog
