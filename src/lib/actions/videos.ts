@@ -67,7 +67,7 @@ export async function getVideos(limit = 20, offset = 0) {
     };
   } catch (error) {
     console.error("Get videos error:", error);
-    return { error: "Internal server error" };
+    return { success: false, message: "Internal server error", videos: [] };
   }
 }
 
