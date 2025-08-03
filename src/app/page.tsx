@@ -10,7 +10,7 @@ export default async function HomePage() {
     throw new Error(result.message);
   }
 
-  const videos = result.videos;
+  const { videos, nextCursor, hasNextPage } = result;
 
   return (
     <div className="h-[calc(100vh-66px)] bg-gray-100 py-3">
@@ -51,7 +51,11 @@ export default async function HomePage() {
           </div>
         </div>
       ) : (
-        <VideoFeed videos={videos} />
+        <VideoFeed
+          videos={videos}
+          nextCursor={nextCursor}
+          hasNextPage={hasNextPage}
+        />
       )}
     </div>
   );

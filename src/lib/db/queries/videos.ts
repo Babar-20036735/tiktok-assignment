@@ -1,36 +1,108 @@
 import { db } from "@/lib/db";
-import { comments, likes, videoViews, videos } from "@/lib/db/schema";
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { comments, likes, videoViews, videos, users } from "@/lib/db/schema";
+import { and, count, desc, eq, sql, lt, gt } from "drizzle-orm";
 
-export const getVideos = async (limit = 20, offset = 0, userId?: string) => {
-  const videoList = await db.query.videos.findMany({
-    with: {
-      user: true,
-    },
-    orderBy: [desc(videos.createdAt)],
-    limit,
-    offset,
-  });
-
-  // If userId is provided, get like status for each video
-  if (userId) {
-    const videosWithLikes = await Promise.all(
-      videoList.map(async (video) => {
-        const userLike = await getUserLikeByVideoId(video.id, userId);
-        const likeStats = await getLikesByVideoId(video.id);
-
-        return {
-          ...video,
-          userLike: userLike?.type || null,
-          likeCount: likeStats.likes,
-          dislikeCount: likeStats.dislikes,
-        };
+export const getVideos = async (limit = 20, cursor?: Date, userId?: string) => {
+  try {
+    // Build the base query with joins
+    const baseQuery = db
+      .select({
+        // Video fields
+        id: videos.id,
+        title: videos.title,
+        description: videos.description,
+        url: videos.url,
+        thumbnail: videos.thumbnail,
+        userId: videos.userId,
+        createdAt: videos.createdAt,
+        updatedAt: videos.updatedAt,
+        // User fields
+        userName: users.name,
+        userEmail: users.email,
+        userImage: users.image,
+        // Like counts using subqueries
+        likeCount: sql<number>`(
+          SELECT COUNT(*)::int 
+          FROM ${likes} l 
+          WHERE l.video_id = ${videos.id} AND l.type = 'like'
+        )`,
+        dislikeCount: sql<number>`(
+          SELECT COUNT(*)::int 
+          FROM ${likes} l 
+          WHERE l.video_id = ${videos.id} AND l.type = 'dislike'
+        )`,
+        commentsCount: sql<number>`(
+          SELECT COUNT(*)::int 
+          FROM ${comments} c 
+          WHERE c.video_id = ${videos.id}
+        )`,
+        // User like status (if userId provided)
+        userLikeType: userId
+          ? sql<"like" | "dislike" | null>`(
+              SELECT l.type 
+              FROM ${likes} l 
+              WHERE l.video_id = ${videos.id} AND l.user_id = ${userId}
+              LIMIT 1
+            )`
+          : sql<"like" | "dislike" | null>`NULL`,
       })
-    );
-    return videosWithLikes;
-  }
+      .from(videos)
+      .innerJoin(users, eq(videos.userId, users.id));
 
-  return videoList;
+    // Add cursor-based pagination
+    const query = cursor
+      ? baseQuery.where(lt(videos.createdAt, cursor))
+      : baseQuery;
+
+    // Add limit and ordering
+    const results = await query
+      .orderBy(desc(videos.createdAt))
+      .limit(limit + 1); // Get one extra to determine if there are more pages
+
+    // Check if there are more pages
+    const hasNextPage = results.length > limit;
+    const videoResults = hasNextPage ? results.slice(0, limit) : results;
+
+    // Transform results to match Video interface
+    const transformedVideos = videoResults.map((video) => ({
+      id: video.id,
+      title: video.title,
+      description: video.description,
+      url: video.url,
+      thumbnail: video.thumbnail,
+      userId: video.userId,
+      createdAt: video.createdAt,
+      updatedAt: video.updatedAt,
+      user: {
+        id: video.userId,
+        name: video.userName,
+        email: video.userEmail,
+        image: video.userImage,
+      },
+      userLike: video.userLikeType,
+      likeCount: video.likeCount,
+      dislikeCount: video.dislikeCount,
+      commentCount: video.commentsCount,
+    }));
+
+    // Get cursor for next page
+    const nextCursor = hasNextPage
+      ? videoResults[videoResults.length - 1].createdAt
+      : null;
+
+    return {
+      videos: transformedVideos,
+      nextCursor,
+      hasNextPage,
+    };
+  } catch (error) {
+    console.error("Get videos query error:", error);
+    return {
+      videos: [],
+      nextCursor: null,
+      hasNextPage: false,
+    };
+  }
 };
 
 export const getVideoById = async (id: string) => {

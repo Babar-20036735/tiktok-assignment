@@ -6,9 +6,15 @@ import { Video } from "@/types/video";
 
 interface VideoFeedProps {
   videos: Video[];
+  nextCursor?: Date | null;
+  hasNextPage?: boolean;
 }
 
-export default function VideoFeed({ videos }: VideoFeedProps) {
+export default function VideoFeed({
+  videos,
+  nextCursor,
+  hasNextPage,
+}: VideoFeedProps) {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

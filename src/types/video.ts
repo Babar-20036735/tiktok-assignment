@@ -14,8 +14,9 @@ export interface Video {
     image: string | null;
   };
   userLike?: "like" | "dislike" | null;
-  likeCount?: number;
-  dislikeCount?: number;
+  likeCount: number;
+  dislikeCount: number;
+  commentCount: number;
 }
 
 export interface VideoUploadData {

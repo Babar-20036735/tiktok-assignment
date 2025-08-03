@@ -147,7 +147,7 @@ export default function VideoCard({
           setDislikeCount((prev) => prev - 1);
         }
       } else {
-        console.error("Dislike error:", result.error);
+        console.error("Dislike error:", result.message);
         toast.error(result.message);
       }
     } catch (error) {
@@ -243,33 +243,48 @@ export default function VideoCard({
 
         {/* Action Buttons */}
         <div className="absolute right-3 bottom-20 flex flex-col space-y-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLike}
-            disabled={isLikeLoading}
-            className={`p-1.5 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-70 ${
-              liked ? "text-red-500" : ""
-            } ${isLikeLoading ? "opacity-50" : ""}`}
-          >
-            <Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />
-          </Button>
+          <div className="flex flex-col items-center space-y-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLike}
+              disabled={isLikeLoading}
+              className={`p-1.5 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-70 ${
+                liked ? "text-red-500" : ""
+              } ${isLikeLoading ? "opacity-50" : ""}`}
+            >
+              <Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />
+            </Button>
+            <span className="text-xs text-white bg-black bg-opacity-50 px-1.5 py-0.5 rounded-full">
+              {likeCount || 0}
+            </span>
+          </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDislike}
-            disabled={isDislikeLoading}
-            className={`p-1.5 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-70 ${
-              disliked ? "text-blue-500" : ""
-            } ${isDislikeLoading ? "opacity-50" : ""}`}
-          >
-            <ThumbsDown
-              className={`h-5 w-5 ${disliked ? "fill-current" : ""}`}
-            />
-          </Button>
+          <div className="flex flex-col items-center space-y-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDislike}
+              disabled={isDislikeLoading}
+              className={`p-1.5 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-70 ${
+                disliked ? "text-blue-500" : ""
+              } ${isDislikeLoading ? "opacity-50" : ""}`}
+            >
+              <ThumbsDown
+                className={`h-5 w-5 ${disliked ? "fill-current" : ""}`}
+              />
+            </Button>
+            <span className="text-xs text-white bg-black bg-opacity-50 px-1.5 py-0.5 rounded-full">
+              {dislikeCount || 0}
+            </span>
+          </div>
 
-          <CommentsSheet videoId={video.id} videoTitle={video.title} />
+          <div className="flex flex-col items-center space-y-1">
+            <CommentsSheet videoId={video.id} videoTitle={video.title} />
+            <span className="text-xs text-white bg-black bg-opacity-50 px-1.5 py-0.5 rounded-full">
+              {video.commentCount || 0}
+            </span>
+          </div>
         </div>
 
         {/* Video Counter */}

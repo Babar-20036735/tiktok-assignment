@@ -47,15 +47,10 @@ export default function UploadPage() {
       }
 
       // Create video record in database
-      const result = await createVideo({
-        title: data.title,
-        description: data.description,
-        url: uploadResult.data.url,
-        userId: session.user.id,
-      });
+      const result = await createVideo(formData);
 
-      if (result.error) {
-        throw new Error(result.error);
+      if (!result.success) {
+        throw new Error(result.message);
       }
 
       // Redirect to home page after successful upload
