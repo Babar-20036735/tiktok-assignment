@@ -80,7 +80,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
 
   const removeFile = () => {
     setSelectedFile(null);
-    setValue("videoFile", undefined);
+    setValue("videoFile", null as unknown as File);
   };
 
   const onFormSubmit = async (data: VideoUploadFormData) => {

@@ -19,16 +19,19 @@ export async function POST(request: NextRequest) {
     // Upload to Cloudinary
     const result = await uploadVideo(file);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        url: result.secure_url,
-        publicId: result.public_id,
-        format: result.format,
-        title,
-        description,
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          url: result.secure_url,
+          publicId: result.public_id,
+          format: result.format,
+          title,
+          description,
+        },
       },
-    });
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(

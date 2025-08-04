@@ -7,13 +7,18 @@ import { revalidatePath } from "next/cache";
 import { getVideos as getVideosQuery } from "@/lib/db/queries/videos";
 import { auth } from "@/auth";
 
-export async function createVideo(formData: FormData) {
+export async function createVideo({
+  title,
+  description,
+  url,
+  thumbnail,
+}: {
+  title: string;
+  description?: string;
+  url: string;
+  thumbnail?: string;
+}) {
   try {
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
-    const url = formData.get("url") as string;
-    const thumbnail = formData.get("thumbnail") as string;
-
     if (!title || !url) {
       return { success: false, message: "Title and URL are required" };
     }
@@ -23,20 +28,32 @@ export async function createVideo(formData: FormData) {
       return { success: false, message: "Authentication required" };
     }
 
-    const newVideo = await db.insert(videos).values({
-      title,
-      description: description || null,
-      url,
-      thumbnail: thumbnail || null,
-      userId: session.user.id,
-    });
+    const [newVideo] = await db
+      .insert(videos)
+      .values({
+        title,
+        description: description || null,
+        url,
+        thumbnail: thumbnail || null,
+        userId: session.user.id,
+      })
+      .returning();
 
     revalidatePath("/");
 
     return {
       success: true,
       message: "Video created successfully",
-      video: newVideo,
+      video: {
+        id: newVideo.id,
+        title: newVideo.title,
+        description: newVideo.description,
+        url: newVideo.url,
+        thumbnail: newVideo.thumbnail,
+        userId: newVideo.userId,
+        createdAt: newVideo.createdAt,
+        updatedAt: newVideo.updatedAt,
+      },
     };
   } catch (error) {
     console.error("Create video error:", error);
@@ -166,7 +183,7 @@ export async function getVideos(limit = 20, cursor?: Date) {
     const session = await auth();
     const userId = session?.user?.id;
 
-    const result = await getVideosQuery(limit, cursor, userId);
+    const result = await getVideosQuery({ limit, cursor, userId });
 
     return {
       success: true,

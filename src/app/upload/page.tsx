@@ -47,7 +47,11 @@ export default function UploadPage() {
       }
 
       // Create video record in database
-      const result = await createVideo(formData);
+      const result = await createVideo({
+        title: data.title,
+        description: data.description,
+        url: uploadResult?.data?.url,
+      });
 
       if (!result.success) {
         throw new Error(result.message);

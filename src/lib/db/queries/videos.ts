@@ -2,7 +2,15 @@ import { db } from "@/lib/db";
 import { comments, likes, videoViews, videos, users } from "@/lib/db/schema";
 import { and, count, desc, eq, sql, lt, gt } from "drizzle-orm";
 
-export const getVideos = async (limit = 20, cursor?: Date, userId?: string) => {
+export const getVideos = async ({
+  limit = 20,
+  cursor,
+  userId,
+}: {
+  limit?: number;
+  cursor?: Date;
+  userId?: string;
+}) => {
   try {
     // Build the base query with joins
     const baseQuery = db
