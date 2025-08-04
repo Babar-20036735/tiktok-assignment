@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { comments, likes, videoViews, videos, users } from "@/lib/db/schema";
-import { and, count, desc, eq, sql, lt, gt } from "drizzle-orm";
+import { and, count, desc, eq, sql, lt } from "drizzle-orm";
 
 export const getVideos = async ({
   limit = 20,

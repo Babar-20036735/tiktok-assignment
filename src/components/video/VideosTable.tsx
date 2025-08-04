@@ -18,7 +18,7 @@ interface UserVideo {
 }
 import { Button } from "@/components/ui/button";
 import { Trash2, Play, Calendar } from "lucide-react";
-import { deleteVideo, getVideosByUserId } from "@/lib/actions/videos";
+import { deleteVideo } from "@/lib/actions/videos";
 import { toast } from "sonner";
 import { useState } from "react";
 import Image from "next/image";

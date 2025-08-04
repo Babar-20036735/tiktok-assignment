@@ -28,10 +28,7 @@ interface CommentsSheetProps {
   videoTitle: string;
 }
 
-export default function CommentsSheet({
-  videoId,
-  videoTitle,
-}: CommentsSheetProps) {
+export default function CommentsSheet({ videoId }: CommentsSheetProps) {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);

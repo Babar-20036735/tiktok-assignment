@@ -45,7 +45,8 @@ export default function VerifyEmailPage({ email }: { email: string }) {
       } else {
         toast.error(result?.error || "Verification failed");
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("Verification error:", error);
       toast.error("An error occurred during verification");
     } finally {
       setIsLoading(false);
@@ -68,7 +69,8 @@ export default function VerifyEmailPage({ email }: { email: string }) {
       } else {
         toast.error("Failed to resend verification code");
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("Resend verification code error:", error);
       toast.error("An error occurred while resending the code");
     } finally {
       setIsResending(false);

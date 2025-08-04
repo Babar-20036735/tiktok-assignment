@@ -3,16 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import {
-  Heart,
-  MessageCircle,
-  ThumbsUp,
-  ThumbsDown,
-  ChevronUp,
-  ChevronDown,
-  Play,
-  Pause,
-} from "lucide-react";
+import { Heart, ThumbsDown, Play } from "lucide-react";
 import LoginDialog from "@/components/auth/LoginDialog";
 import { Video } from "@/types/video";
 import { likeVideoAction, dislikeVideoAction } from "@/lib/actions/likes";
@@ -36,10 +27,6 @@ interface VideoCardProps {
 export default function VideoCard({
   video,
   onVideoEnd,
-  onPrevious,
-  onNext,
-  canGoPrevious,
-  canGoNext,
   currentIndex,
   totalVideos,
   isActive = true,
@@ -155,13 +142,6 @@ export default function VideoCard({
       toast.error("Something went wrong");
     } finally {
       setIsDislikeLoading(false);
-    }
-  };
-
-  const handleComment = () => {
-    if (!session) {
-      setShowLoginDialog(true);
-      return;
     }
   };
 

@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { auth } from "./auth";
 
 // Protected routes that require authentication
-const protectedRoutes = ["/upload", "/liked-videos"];
+const protectedRoutes = ["/upload", "/liked-videos", "/videos-management"];
 
 // Auth routes that should redirect to home if already logged in
 const authRoutes = ["/auth/signin", "/auth/signup"];

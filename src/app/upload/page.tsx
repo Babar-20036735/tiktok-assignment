@@ -2,7 +2,6 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import VideoUploadForm from "@/components/forms/VideoUploadForm";
 import { createVideo } from "@/lib/actions/videos";
 import { toast } from "sonner";

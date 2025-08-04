@@ -44,7 +44,8 @@ export default function SignUpForm() {
           `/auth/verify-email?email=${encodeURIComponent(data.email)}`
         );
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("Sign-up error:", error);
       setError("An error occurred. Please try again.");
     }
   };

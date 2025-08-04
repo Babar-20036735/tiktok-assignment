@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Upload, User, LogOut, Heart, Menu, X, Video } from "lucide-react";
+import { Upload, LogOut, Heart, Menu, Video } from "lucide-react";
 
 export default function Navigation() {
   const { data: session } = useSession();

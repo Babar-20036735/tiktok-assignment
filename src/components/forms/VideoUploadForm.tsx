@@ -41,7 +41,6 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
     handleSubmit,
     formState: { errors },
     setValue,
-    watch,
   } = useForm<VideoUploadFormData>({
     resolver: zodResolver(videoUploadSchema),
   });

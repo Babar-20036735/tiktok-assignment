@@ -52,7 +52,8 @@ export default function SignInForm() {
         router.push("/");
         router.refresh();
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("Sign-in error:", error);
       setError("An error occurred. Please try again.");
     }
   };

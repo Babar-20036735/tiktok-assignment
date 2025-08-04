@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { likes, videos, users, comments } from "@/lib/db/schema";
-import { and, eq, desc, count, sql } from "drizzle-orm";
+import { and, eq, desc, sql } from "drizzle-orm";
 
 export const getLikedVideosByUserId = async (userId: string) => {
   return await db
