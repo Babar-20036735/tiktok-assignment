@@ -1,6 +1,8 @@
 import VideoFeed from "@/components/video/VideoFeed";
 import { getVideos } from "@/lib/actions/videos";
 import { auth } from "@/auth";
+import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default async function HomePage() {
   const session = await auth();
@@ -40,12 +42,12 @@ export default async function HomePage() {
             </p>
             {session && (
               <div className="mt-4">
-                <a
+                <Link
                   href="/upload"
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
                 >
                   Upload Your First Video
-                </a>
+                </Link>
               </div>
             )}
           </div>

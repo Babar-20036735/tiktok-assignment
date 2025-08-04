@@ -4,6 +4,7 @@ import "./globals.css";
 import SessionProvider from "@/components/auth/SessionProvider";
 import Navigation from "@/components/layout/Navigation";
 import { Toaster } from "@/components/ui/sonner";
+import NextTopLoader from "nextjs-toploader";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,8 +22,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <SessionProvider>
+          <NextTopLoader color="#003366" showSpinner={false} />
           <Navigation />
-          <main>{children}</main>
+          <main className="bg-[#eee]">{children}</main>
         </SessionProvider>
         <Toaster />
       </body>
