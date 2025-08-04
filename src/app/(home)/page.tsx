@@ -3,24 +3,10 @@ import { getVideos } from "@/lib/actions/videos";
 import { auth } from "@/auth";
 import Link from "next/link";
 
-interface HomePageProps {
-  searchParams: { cursor?: string };
-}
-
-export default async function HomePage({ searchParams }: HomePageProps) {
+export default async function HomePage() {
   const session = await auth();
 
-  // Parse cursor from URL params
-  let cursor: Date | undefined;
-  if (searchParams.cursor) {
-    try {
-      cursor = new Date(searchParams.cursor);
-    } catch (error) {
-      console.error("Invalid cursor date:", searchParams.cursor);
-    }
-  }
-
-  const result = await getVideos(2, cursor);
+  const result = await getVideos(10);
 
   if (!result.success) {
     throw new Error(result.message);

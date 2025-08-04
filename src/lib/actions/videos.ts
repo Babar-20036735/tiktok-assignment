@@ -81,8 +81,15 @@ export async function getVideoById(id: string) {
   }
 }
 
-export async function getVideosByUserId(userId: string) {
+export async function getVideosByUserId() {
   try {
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+      return { success: false, message: "User not authenticated" };
+    }
+
     const userVideos = await db.query.videos.findMany({
       where: eq(videos.userId, userId),
       with: {

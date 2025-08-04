@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Upload, User, LogOut, Heart, Menu, X } from "lucide-react";
+import { Upload, User, LogOut, Heart, Menu, X, Video } from "lucide-react";
 
 export default function Navigation() {
   const { data: session } = useSession();
@@ -62,6 +62,16 @@ export default function Navigation() {
                 <Button variant="ghost" className="w-full justify-start">
                   <Upload className="h-4 w-4 mr-2" />
                   Upload Video
+                </Button>
+              </Link>
+
+              <Link
+                href="/videos-management"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Button variant="ghost" className="w-full justify-start">
+                  <Video className="h-4 w-4 mr-2" />
+                  My Videos
                 </Button>
               </Link>
 
@@ -138,6 +148,12 @@ export default function Navigation() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
+          <Link href="/videos-management" className="cursor-pointer">
+            <Video className="mr-2 h-4 w-4" />
+            <span>My Videos</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/liked-videos" className="cursor-pointer">
             <Heart className="mr-2 h-4 w-4" />
             <span>Liked Videos</span>
@@ -183,13 +199,13 @@ export default function Navigation() {
                   </Button>
                 </Link>
 
-                <Link href="/liked-videos">
+                <Link href="/videos-management">
                   <Button
                     variant="outline"
                     className="flex items-center space-x-2"
                   >
-                    <Heart className="h-4 w-4" />
-                    <span>Liked</span>
+                    <Video className="h-4 w-4" />
+                    <span>My Videos</span>
                   </Button>
                 </Link>
 
