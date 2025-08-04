@@ -1,52 +1,39 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { createUser } from "@/lib/actions/users";
 import Link from "next/link";
+import FormInput from "@/components/ui/form-input";
+import {
+  signUpSchema,
+  SignUpFormData,
+} from "@/components/schemas/SignupSchema";
 
 export default function SignUpForm() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting: isLoading },
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const onSubmit = async (data: SignUpFormData) => {
     setError("");
-
-    // Validate passwords match
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
-
-    // Validate password length
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      setIsLoading(false);
-      return;
-    }
 
     try {
       const result = await createUser({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
+        name: data.name,
+        email: data.email,
+        password: data.password,
       });
 
       if (result.error) {
@@ -54,13 +41,11 @@ export default function SignUpForm() {
       } else {
         // Redirect to verification page after successful signup
         router.push(
-          `/auth/verify-email?email=${encodeURIComponent(formData.email)}`
+          `/auth/verify-email?email=${encodeURIComponent(data.email)}`
         );
       }
     } catch (error) {
       setError("An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -74,79 +59,48 @@ export default function SignUpForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Full Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <FormInput
+          label="Full Name"
+          id="name"
+          type="text"
+          error={errors.name?.message}
+          required
+          {...register("name")}
+        />
 
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
+        <FormInput
+          label="Email"
+          id="email"
+          type="email"
+          error={errors.email?.message}
+          required
+          {...register("email")}
+        />
 
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            minLength={6}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
+        <FormInput
+          label="Password"
+          id="password"
+          type="password"
+          error={errors.password?.message}
+          required
+          showPasswordToggle
+          showPassword={showPassword}
+          onTogglePassword={() => setShowPassword(!showPassword)}
+          {...register("password")}
+        />
 
-        <div>
-          <label
-            htmlFor="confirmPassword"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Confirm Password
-          </label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
+        <FormInput
+          label="Confirm Password"
+          id="confirmPassword"
+          type="password"
+          error={errors.confirmPassword?.message}
+          required
+          showPasswordToggle
+          showPassword={showConfirmPassword}
+          onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
+          {...register("confirmPassword")}
+        />
 
         <button
           type="submit"

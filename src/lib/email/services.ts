@@ -22,7 +22,7 @@ export const sendVerificationEmail = async (
     const mailOptions = {
       from: getFromEmail(),
       to: to,
-      subject: "Verify Your Email Address - TikTok Clone",
+      subject: "Verify Your Email Address - VideoPlatform",
       html: createVerificationEmailTemplate(code, userName),
     };
 
@@ -53,7 +53,7 @@ export const sendWelcomeEmail = async (
     const mailOptions = {
       from: getFromEmail(),
       to: to,
-      subject: "Welcome to TikTok Clone! 🎉",
+      subject: "Welcome to VideoPlatform! 🎉",
       html: createWelcomeEmailTemplate(userName),
     };
 

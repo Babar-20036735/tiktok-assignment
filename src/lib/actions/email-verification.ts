@@ -47,8 +47,6 @@ export async function sendVerificationEmail(email: string) {
     return {
       success: true,
       message: "Verification code sent to your email",
-      // Remove this in production - only for testing
-      verificationCode: result.verificationCode,
     };
   } catch (error) {
     console.error("Send verification email error:", error);
@@ -60,15 +58,12 @@ export async function verifyEmail(email: string, code: string) {
   try {
     const result = await verifyEmailCode(email, code);
 
-    if (!result.success) {
+    if (!result.success || !result.user) {
       return result;
     }
 
     // Send welcome email after successful verification
-    const welcomeEmailResult = await sendWelcomeEmail(email, result.user.name);
-    if (!welcomeEmailResult.success) {
-      console.error("Failed to send welcome email:", welcomeEmailResult.error);
-    }
+    sendWelcomeEmail(email, result?.user?.name);
 
     return {
       success: true,

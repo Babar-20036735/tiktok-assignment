@@ -1,18 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import FormInput from "@/components/ui/form-input";
+
+import {
+  signInSchema,
+  SignInFormData,
+} from "@/components/schemas/SigninSchema";
 
 export default function SignInForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting: isLoading },
+  } = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+  });
 
   useEffect(() => {
     const verified = searchParams.get("verified");
@@ -21,15 +35,13 @@ export default function SignInForm() {
     }
   }, [searchParams]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const onSubmit = async (data: SignInFormData) => {
     setError("");
 
     try {
       const result = await signIn("credentials", {
-        email,
-        password,
+        email: data.email,
+        password: data.password,
         redirect: false,
       });
 
@@ -42,8 +54,6 @@ export default function SignInForm() {
       }
     } catch (error) {
       setError("An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -57,40 +67,27 @@ export default function SignInForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <FormInput
+          label="Email"
+          id="email"
+          type="email"
+          error={errors.email?.message}
+          required
+          {...register("email")}
+        />
 
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
+        <FormInput
+          label="Password"
+          id="password"
+          type="password"
+          error={errors.password?.message}
+          required
+          showPasswordToggle
+          showPassword={showPassword}
+          onTogglePassword={() => setShowPassword(!showPassword)}
+          {...register("password")}
+        />
 
         <button
           type="submit"

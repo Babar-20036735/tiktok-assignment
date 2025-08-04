@@ -7,11 +7,7 @@ export async function createUser({
   email,
   password,
   name,
-}: {
-  email: string;
-  password: string;
-  name: string;
-}) {
+}: typeof users.$inferInsert) {
   const hashedPassword = await hashPassword(password);
 
   const newUser = await db
@@ -36,7 +32,4 @@ export const getUserByEmail = async (email: string) => {
   return await db.query.users.findFirst({
     where: eq(users.email, email),
   });
-
-  // const [user] = await db.select().from(users).where(eq(users.email, email));
-  // return user;
 };

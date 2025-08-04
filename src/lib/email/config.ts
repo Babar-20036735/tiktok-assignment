@@ -39,5 +39,5 @@ export const getFromEmail = (): string => {
   if (!user) {
     throw new Error("SMTP_USER environment variable is required");
   }
-  return `"TikTok Clone" <${user}>`;
+  return `"VideoPlatform" <${user}>`;
 };

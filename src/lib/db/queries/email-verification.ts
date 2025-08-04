@@ -40,21 +40,21 @@ export async function verifyEmailCode(email: string, code: string) {
     });
 
     if (!user) {
-      return { error: "User not found" };
+      return { success: false, error: "User not found" };
     }
 
     if (!user.verificationCode || !user.verificationCodeExpires) {
-      return { error: "No verification code found" };
+      return { success: false, error: "No verification code found" };
     }
 
     // Check if code is expired
     if (new Date() > user.verificationCodeExpires) {
-      return { error: "Verification code has expired" };
+      return { success: false, error: "Verification code has expired" };
     }
 
     // Check if code matches
     if (user.verificationCode !== code) {
-      return { error: "Invalid verification code" };
+      return { success: false, error: "Invalid verification code" };
     }
 
     // Update user to verified
@@ -72,10 +72,11 @@ export async function verifyEmailCode(email: string, code: string) {
     return {
       success: true,
       user: updatedUser[0],
+      error: null,
     };
   } catch (error) {
     console.error("Verify email code error:", error);
-    return { error: "Failed to verify email code" };
+    return { success: false, error: "Failed to verify email code" };
   }
 }
 

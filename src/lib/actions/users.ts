@@ -3,11 +3,12 @@
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { hashPassword } from "@/lib/utils";
+import { createUser as createUserInDb } from "@/lib/db/queries/users";
 import { revalidatePath } from "next/cache";
 import { getUserByEmail } from "../db/queries/users";
 import { generateVerificationCode } from "../db/queries/email-verification";
 import { sendVerificationEmail } from "../email";
+import { signUpSchema } from "@/components/schemas/SignupSchema";
 
 export async function createUser({
   email,
@@ -19,13 +20,15 @@ export async function createUser({
   name: string;
 }) {
   try {
-    // Validate input
-    if (!email || !password || !name) {
-      return { error: "Email, password, and name are required" };
-    }
+    const result = signUpSchema.safeParse({
+      name,
+      email,
+      password,
+      confirmPassword: password,
+    });
 
-    if (password.length < 6) {
-      return { error: "Password must be at least 6 characters long" };
+    if (!result.success) {
+      return { error: result.error.issues[0].message };
     }
 
     // Check if user already exists
@@ -35,18 +38,11 @@ export async function createUser({
       return { error: "User with this email already exists" };
     }
 
-    // Hash password and create user
-    const hashedPassword = await hashPassword(password);
-
-    const newUser = await db
-      .insert(users)
-      .values({
-        email,
-        password: hashedPassword,
-        name,
-        emailVerified: "false",
-      })
-      .returning();
+    const newUser = await createUserInDb({
+      email,
+      password,
+      name,
+    });
 
     // Generate verification code
     const verificationResult = await generateVerificationCode(email);
@@ -56,29 +52,19 @@ export async function createUser({
     }
 
     // Send verification email
-    const emailResult = await sendVerificationEmail(
+    sendVerificationEmail(
       email,
       verificationResult.verificationCode,
-      newUser[0].name
+      newUser.name
     );
-
-    if (!emailResult.success) {
-      console.error("Failed to send verification email:", emailResult.error);
-      // Still log the code for testing if email fails
-      console.log(
-        `Verification code for ${email}: ${verificationResult.verificationCode}`
-      );
-    }
 
     return {
       success: true,
       user: {
-        id: newUser[0].id,
-        email: newUser[0].email,
-        name: newUser[0].name,
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
       },
-      // Remove this in production - only for testing
-      verificationCode: verificationResult.verificationCode,
     };
   } catch (error) {
     console.error("Create user error:", error);
@@ -113,7 +99,7 @@ export async function updateUser({
   image?: string;
 }) {
   try {
-    const updateData: any = {};
+    const updateData: { name?: string; image?: string } = {};
     if (name) updateData.name = name;
     if (image) updateData.image = image;
 
