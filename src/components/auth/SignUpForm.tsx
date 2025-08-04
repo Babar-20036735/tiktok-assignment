@@ -52,8 +52,10 @@ export default function SignUpForm() {
       if (result.error) {
         setError(result.error);
       } else {
-        // Redirect to sign in page after successful signup
-        router.push("/auth/signin?message=Account created successfully");
+        // Redirect to verification page after successful signup
+        router.push(
+          `/auth/verify-email?email=${encodeURIComponent(formData.email)}`
+        );
       }
     } catch (error) {
       setError("An error occurred. Please try again.");

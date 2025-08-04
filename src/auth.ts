@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 
 import { getUserByEmail } from "@/lib/db/queries/users";
 import { verifyPassword } from "@/lib/utils";
+import { isEmailVerified } from "@/lib/db/queries/email-verification";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -32,6 +33,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           if (!isPasswordValid) {
             console.log("Invalid password");
+            return null;
+          }
+
+          // Check if email is verified
+          const emailVerified = await isEmailVerified(
+            credentials.email as string
+          );
+          if (!emailVerified) {
+            console.log("Email not verified");
             return null;
           }
 

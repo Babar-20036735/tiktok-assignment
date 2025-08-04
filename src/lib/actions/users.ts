@@ -6,6 +6,8 @@ import { eq } from "drizzle-orm";
 import { hashPassword } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { getUserByEmail } from "../db/queries/users";
+import { generateVerificationCode } from "../db/queries/email-verification";
+import { sendVerificationEmail } from "../email";
 
 export async function createUser({
   email,
@@ -42,8 +44,31 @@ export async function createUser({
         email,
         password: hashedPassword,
         name,
+        emailVerified: "false",
       })
       .returning();
+
+    // Generate verification code
+    const verificationResult = await generateVerificationCode(email);
+
+    if (!verificationResult.success) {
+      return { error: "Failed to generate verification code" };
+    }
+
+    // Send verification email
+    const emailResult = await sendVerificationEmail(
+      email,
+      verificationResult.verificationCode,
+      newUser[0].name
+    );
+
+    if (!emailResult.success) {
+      console.error("Failed to send verification email:", emailResult.error);
+      // Still log the code for testing if email fails
+      console.log(
+        `Verification code for ${email}: ${verificationResult.verificationCode}`
+      );
+    }
 
     return {
       success: true,
@@ -52,6 +77,8 @@ export async function createUser({
         email: newUser[0].email,
         name: newUser[0].name,
       },
+      // Remove this in production - only for testing
+      verificationCode: verificationResult.verificationCode,
     };
   } catch (error) {
     console.error("Create user error:", error);
