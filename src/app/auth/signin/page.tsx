@@ -1,4 +1,5 @@
 import SignInForm from "@/components/auth/SignInForm";
+import { Suspense } from "react";
 
 export default function SignInPage() {
   return (
@@ -8,7 +9,9 @@ export default function SignInPage() {
           Welcome back
         </h1>
       </div>
-      <SignInForm />
+      <Suspense fallback={<></>}>
+        <SignInForm />
+      </Suspense>
     </div>
   );
 }

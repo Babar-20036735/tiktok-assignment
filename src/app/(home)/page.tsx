@@ -2,6 +2,7 @@ import VideoFeed from "@/components/video/VideoFeed";
 import { getVideos } from "@/lib/actions/videos";
 import { auth } from "@/auth";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export default async function HomePage() {
   const session = await auth();
@@ -53,11 +54,13 @@ export default async function HomePage() {
           </div>
         </div>
       ) : (
-        <VideoFeed
-          videos={videos}
-          nextCursor={nextCursor}
-          hasNextPage={hasNextPage}
-        />
+        <Suspense fallback={<></>}>
+          <VideoFeed
+            videos={videos}
+            nextCursor={nextCursor}
+            hasNextPage={hasNextPage}
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import VideoFeed from "@/components/video/VideoFeed";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export default async function LikedVideosPage() {
   const session = await auth();
@@ -56,7 +57,9 @@ export default async function LikedVideosPage() {
           </div>
         </div>
       ) : (
-        <VideoFeed videos={videos} />
+        <Suspense fallback={<></>}>
+          <VideoFeed videos={videos} />
+        </Suspense>
       )}
     </div>
   );

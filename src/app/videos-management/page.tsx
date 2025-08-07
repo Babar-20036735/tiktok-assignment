@@ -4,9 +4,11 @@ import { Play, User } from "lucide-react";
 import Link from "next/link";
 import VideosTable from "@/components/video/VideosTable";
 
+export const dynamic = 'force-dynamic'
+
 export default async function VideosManagementPage() {
   const result = await getVideosByUserId();
-  if (!result.success) {
+  if (!result || !result.success) {
     throw new Error(result.message);
   }
   const videos = result.videos || [];
