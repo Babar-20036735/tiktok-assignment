@@ -62,4 +62,3 @@ jobs:
           app-name: 'tiktokassignment'
           slot-name: 'Production'
           package: .
-          
