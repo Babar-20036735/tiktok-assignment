@@ -1,11 +1,18 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { defineConfig } from "drizzle-kit";
 
-import * as schema from "./schema";
-
-
-
-const sql = neon("postgresql://neondb_owner:npg_AM8igLBR4PzF@ep-cold-rice-a1voy9oy-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require");
-export const db = drizzle({ client: sql, schema });
-
-export * from "./schema";
+export default defineConfig({
+  schema: "./src/db/schema.ts",
+  out: "./drizzle", 
+  dialect: "postgresql",
+  dbCredentials: {
+    host: "babar123.postgres.database.azure.com",
+    user: "babar",
+    password: "Ubuntu@24.04", 
+    database: "postgres",
+    port: 5432,
+    ssl: {
+      rejectUnauthorized: false,
+  
+    }
+  }
+});
