@@ -3,10 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Play, User } from "lucide-react";
 import Link from "next/link";
 import VideosTable from "@/components/video/VideosTable";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export default async function VideosManagementPage() {
+  const session = await auth();
+  // Check if user is authenticated
+  if (!session?.user?.id) {
+    redirect("/auth/signin");
+  }
+
   const result = await getVideosByUserId();
   if (!result || !result.success) {
     throw new Error(result.message);
